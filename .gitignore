@@ -1,0 +1,63 @@
+﻿# Build Folders
+bin/
+obj/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.userprefs
+
+# Visual Studio-specific files
+.vscode/
+.vs/
+.vscode/settings.json
+
+# NuGet packages
+*.nupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+
+# Auto-generated files
+*.Generated.cs
+*.g.i.cs
+*.g.cs
+
+# Logs, crash reports, etc.
+*.log
+
+# Backup & temp files
+*.bak
+*.tmp
+~$*
+
+# Recycle bin files
+$RECYCLE.BIN/
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Deployment Files
+.publish/
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# JetBrains Rider
+.idea/
+
+# macOS system files
+.DS_Store
+
+# Localization
+*.resx
+*.resources
+
+# Other binaries
+*.dll
+*.exe
+*.pdb

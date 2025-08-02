@@ -1,0 +1,18 @@
+﻿<Window
+    x:Class="PROS.Views.MainWindowView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:PROS.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Title=""
+    Width="1280"
+    Height="720"
+    MinWidth="1280"
+    MinHeight="720"
+    mc:Ignorable="d">
+    <Grid>
+        <UserControl Grid.Row="0" prism:RegionManager.RegionName="MainRegion" />
+    </Grid>
+</Window>
