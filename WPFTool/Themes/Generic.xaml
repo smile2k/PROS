@@ -1,0 +1,24 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:WPFTool">
+    
+    <!-- Include Material resources -->
+    <ResourceDictionary.MergedDictionaries>
+        <!--<ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />-->
+        <!--<ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.DeepPurple.xaml" />-->
+        <!--<ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Lime.xaml" />-->
+
+
+        <ResourceDictionary Source="/WPFTool;component/Themes/WpButton.xaml"/>
+        <ResourceDictionary Source="/WPFTool;component/Themes/WpComboBox.xaml"/>
+        <ResourceDictionary Source="/WPFTool;component/Themes/WpTextBox.xaml"/>
+        <ResourceDictionary Source="/WPFTool;component/Themes/WpMenuPanel.xaml"/>
+        <ResourceDictionary Source="/WPFTool;component/Themes/WpProgressBar.xaml"/>
+        <ResourceDictionary Source="/WPFTool;component/Themes/WpSpinner.xaml"/>
+        <ResourceDictionary Source="/WPFTool;component/Themes/WpCircleProgressBar.xaml"/>
+        <ResourceDictionary Source="/WPFTool;component/Themes/WpDataGrid.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    
+</ResourceDictionary>

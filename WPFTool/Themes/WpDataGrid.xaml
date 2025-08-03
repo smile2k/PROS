@@ -1,0 +1,181 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:WPFTool.Controls"
+                    xmlns:local="clr-namespace:WPFTool.Helpers">
+
+    <Style TargetType="{x:Type controls:WpDataGrid}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:WpDataGrid}">
+                    <Border CornerRadius="10"
+                            BorderThickness="0"
+                            BorderBrush="#6200EE"
+                            Background="#f7f9fd"
+                            Padding="0"
+                            SnapsToDevicePixels="True">
+                        <Border.Effect>
+                            <DropShadowEffect Color="Black"
+                                              BlurRadius="10"
+                                              ShadowDepth="2"
+                                              Opacity="0.2" />
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition Height="30"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Main DataGrid -->
+                            <DataGrid Grid.Row="0"
+                                      ItemsSource="{TemplateBinding PagedItemsSource}"
+                                      AutoGenerateColumns="True"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="None"
+                                      RowBackground="White"
+                                      AlternatingRowBackground="#f7f9fd"
+                                      BorderThickness="0"
+                                      BorderBrush="#dee1e6"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      CanUserResizeRows="False"
+                                      FontSize="14"
+                                      FontFamily="Segoe UI"
+                                      RowHeight="24"
+                                      SelectionMode="Single"
+                                      SelectionUnit="FullRow"
+                                      Background="#f7f9fd"
+                                      HorizontalGridLinesBrush="Transparent"
+                                      VerticalGridLinesBrush="Transparent"
+                                      Margin="5">
+                                <DataGrid.ColumnHeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader">
+                                        <Setter Property="Background" Value="#f7f9fd" />
+                                        <Setter Property="Foreground" Value="#464F60" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                        <Setter Property="HorizontalContentAlignment" Value="Left" />
+                                        <Setter Property="Padding" Value="10,0" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="Height" Value="32" />
+                                    </Style>
+                                </DataGrid.ColumnHeaderStyle>
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Foreground" Value="Black" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="SnapsToDevicePixels" Value="True" />
+                                    </Style>
+                                </DataGrid.RowStyle>
+                                <DataGrid.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="Padding" Value="5,0" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Foreground" Value="#464F60" />
+                                        <Setter Property="HorizontalContentAlignment" Value="Left" />
+                                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                                    </Style>
+                                </DataGrid.CellStyle>
+
+
+                            </DataGrid>
+                            
+                            <!-- Paging control -->
+                            <Grid Grid.Row="1" ShowGridLines="False">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="auto" />
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="24" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Center"
+                                           FontFamily="Verdana"
+                                           Text="Page size" />
+                                <controls:WpTextBox Grid.Column="1"
+                                         Height="24"                                         
+                                         BorderThickness="1"
+                                         Margin="0,0,0,0"
+                                         VerticalContentAlignment="Center"
+                                         HorizontalAlignment="Left"
+                                         Text="{Binding PageSize, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <controls:WpTextBox.InputBindings>
+                                        <KeyBinding Key="Enter"
+                                                    Command="{Binding LostFocusCommand, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    </controls:WpTextBox.InputBindings>
+                                </controls:WpTextBox>
+                                <!--<controls:WpTextBox Grid.Column="1">
+                                    
+                                </controls:WpTextBox>-->
+                                <Grid Grid.Column="2" />
+
+                                <TextBlock Grid.Column="3"
+                                           Margin="0,0,5,0"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Center"
+                                           FontFamily="Verdana">
+                                    <Run Text="{Binding StartRow, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <Run Text="-" />
+                                    <Run Text="{Binding EndRow, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <Run Text="of" />
+                                    <Run Text="{Binding TotalRow, RelativeSource={RelativeSource TemplatedParent}}" />
+                                </TextBlock>
+
+                                <controls:WpButton Grid.Column="4"
+                                                   Margin="0,0,0,0"
+                                                   Width="24"
+                                                   Height="24"
+                                                   BorderBrush="#FFFFFF"
+                                                   BorderThickness="1"
+                                                   Content="&lt;&lt;"
+                                                   Command="{Binding GoToPreviousMultiPageCommand, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <controls:WpButton Grid.Column="5"
+                                                   Margin="0,0,0,0"
+                                                   Width="24"
+                                                   Height="24"
+                                                   BorderBrush="#FFFFFF"
+                                                   BorderThickness="1"
+                                                   Content="&lt;"
+                                                   Command="{Binding GoToPreviousPageCommand, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <controls:WpComboBox Grid.Column="6"
+                                                     Margin="1,0,1,0"
+                                                     Width="80"
+                                                     MinWidth="60"
+                                                     Height="24"
+                                                     IsEditable="True"
+                                                     ItemsSource="{Binding PageList, RelativeSource={RelativeSource TemplatedParent}}"
+                                                     SelectedItem="{Binding CurrentPage, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                </controls:WpComboBox>
+                                <controls:WpButton Grid.Column="7"
+                                                   Margin="0,0,0,0"
+                                                   Width="24"
+                                                   Height="24"
+                                                   BorderBrush="#FFFFFF"
+                                                   BorderThickness="1"
+                                                   Content=">"
+                                                   Command="{Binding GoToNextPageCommand, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <controls:WpButton Grid.Column="8"
+                                                   Margin="0,0,0,0"
+                                                   Width="24"
+                                                   Height="24"
+                                                   BorderBrush="#FFFFFF"
+                                                   BorderThickness="1"
+                                                   Content=">>"
+                                                   Command="{Binding GoToNextMutiPageCommand, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                            </Grid>
+                            
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
