@@ -15,7 +15,7 @@ namespace PROS
          protected override Window CreateShell()
          {
             // Return the main window of the application. 
-            return Container.Resolve<MainWindowView>();
+            return Container.Resolve<PROS.Views.MainWindowView>();
          }    
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
