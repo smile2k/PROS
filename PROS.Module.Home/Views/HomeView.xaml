@@ -93,7 +93,7 @@
                             <DataGridTextColumn Binding="{Binding CongThuc}" Header="CongThuc" />
                             <DataGridTextColumn Binding="{Binding COD}" Header="COD" />
                             <DataGridTextColumn Binding="{Binding Diff}" Header="Diff" />
-                            <DataGridTextColumn Binding="{Binding KetQuaDoiSoat}" Header="KetQuaDoiSoat" />
+                            <DataGridTextColumn Binding="{Binding Result}" Header="KetQuaDoiSoat" />
                             <!--  Thêm các cột khác theo OrderModel  -->
                         </DataGrid.Columns>
                     </DataGrid>

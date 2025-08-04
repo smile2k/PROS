@@ -43,6 +43,34 @@ namespace PROS.Module.Home.ViewModels
         private Dictionary<string, OrderModel> _orderDict;
         private string _sheetName = "sheet";
 
+        public readonly record struct TrangThai(string Value)
+        {
+            public static readonly TrangThai BanBestHoanPOS = new("Ok bán BEST hoàn do POS đã nhảy số lượng sau hoàn");
+            public static readonly TrangThai BiHoanSinhCongNoShopee = new("Ok bị hoàn và sinh ra công nợ với Shopee");
+            public static readonly TrangThai BiHoanCongNoShopeeGiamGia = new("Ok bị hoàn và sinh ra công nợ với Shopee, đc trả thêm giảm giá đơn hàng");
+            public static readonly TrangThai BiThuPhiHoanHangLech = new("Ok bị thu phí hoàn hàng lệch do đc trả lại phần giảm giá đơn hàng");
+            public static readonly TrangThai GHTK = new("Ok GHTK");
+            public static readonly TrangThai GHTKLechPhiSanPOS = new("Ok GHTK lệch do phí sàn đồng bộ về POS sai");
+            public static readonly TrangThai GHTKKhongCongNoShopee = new("Ok GHTK và không sinh ra công nợ với Shopee");
+            public static readonly TrangThai MatPhi = new("Ok mất phí");
+            public static readonly TrangThai MatPhiVaSPHoanBest = new("Ok mất phí và các sản phẩm hoàn bán BEST");
+            public static readonly TrangThai KhongCongNoShopee = new("Ok và không sinh ra công nợ với Shopee");
+            public static readonly TrangThai DoiSoatKySau = new("Ok đối soát kỳ sau");
+            public static readonly TrangThai POSThieuShopeeCo = new("POS thiếu Shopee có");
+            public static readonly TrangThai LechDoTraThemGiaDonHang = new("Ok lệch được do trả thêm giảm giá đơn hàng");
+            public static readonly TrangThai LechDoPhiSanDongBoVePOSSai = new("Ok lệch do phí sàn đồng bộ về POS sai");
+            public static readonly TrangThai LechDoDuocTraThemGiamGiaDonHangVaBanHoanBest = new("Ok lệch do đc trả thêm giảm giá đơn hàng và bán hoàn BEST");
+            public static readonly TrangThai LechDoPhiSanDongBoVePOSSaiVaBanHoanBest = new("Ok lệch do phí sàn đồng bộ về POS sai và bán hoàn BEST");
+            public static readonly TrangThai CheckSanViDonHoanKhongTinhPhiSan = new("Check lại sàn vì đơn hoàn không được tính phí sàn");
+            public static readonly TrangThai GHTKLechDoTraThemGiamGiaDonHang = new("Ok GHTK lệch do đc trả thêm giảm giá đơn hàng");
+            public static readonly TrangThai GHTKLechPhiSanDongBoPOSSauVaBanHoanBest = new("Ok GHTK lệch do phí sàn đồng bộ về POS sai và bán hoàn BEST");
+            public static readonly TrangThai GHTKDoPosNhaySoLuongSauHoan = new("Ok GHTK do POS đã nhảy số lượng sau hoàn");
+            public static readonly TrangThai GHTKSinhRaCongNoShopee = new("OK GHTK và sinh ra công nợ với Shopee");
+            public static readonly TrangThai ChuaRo = new("0");
+
+            public override string ToString() => Value;
+        }
+
         public HomeViewModel(IRegionManager regionManager, IEventAggregator eventAggregator)
         {
             _regionManager = regionManager;
@@ -69,6 +97,16 @@ namespace PROS.Module.Home.ViewModels
         private void Analyze()
         {
             LoadPOSSheet();
+            LoadShopeeSheet();
+            Judgement();
+
+            OrderList = new ObservableCollection<OrderModel>(
+                _orderDict.Select(kvp => 
+                {
+                    //kvp.Value.OrderId = kvp.Key;
+                    return kvp.Value;
+                })
+            );
         }
 
         #region Navigation
@@ -113,6 +151,11 @@ namespace PROS.Module.Home.ViewModels
             
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+            if (string.IsNullOrEmpty(ShopeeFilePath))
+            {
+                MessageBox.Show($"POS file can not found!", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             using var package = new ExcelPackage(new FileInfo(POSFilePath));
             var worksheet = package.Workbook.Worksheets[_sheetName];
 
@@ -145,25 +188,265 @@ namespace PROS.Module.Home.ViewModels
                     PhiCoDinh_GiaoDich_SanTMDT = ParseDecimal(worksheet.Cells[row, 23].Text),
                     SoLuongHoan = ParseInt(worksheet.Cells[row, 16].Text),
                     TrangThai = worksheet.Cells[row, 31].Text,
+                    //TriGiaHoan = ParseDecimal(worksheet.Cells[row, 32].Text),
                     //CongThuc = worksheet.Cells[row, 17].Text,
                     //COD = ParseDecimal(worksheet.Cells[row, 18].Text),
                     //Diff = ParseDecimal(worksheet.Cells[row, 19].Text)
                 };
 
+                order.CongThuc = CalculateEstimatedIncome(order);
+
                 if (!string.IsNullOrWhiteSpace(order.OrderId))
                     ordersById[order.OrderId] = order;
             }
-            OrderList = new ObservableCollection<OrderModel>(
-                ordersById.Select(kvp => 
-                {
-                    //kvp.Value.OrderId = kvp.Key;
-                    return kvp.Value;
-                })
-            );
 
+             _orderDict = ordersById; 
+
+            //OrderList = new ObservableCollection<OrderModel>(
+            //    ordersById.Select(kvp => 
+            //    {
+            //        //kvp.Value.OrderId = kvp.Key;
+            //        return kvp.Value;
+            //    })
+            //);
 
         }
 
+        private void LoadShopeeSheet()
+        {
+            var ordersById = new Dictionary<string, OrderModel>();
+            
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            if (string.IsNullOrEmpty(ShopeeFilePath))
+            {
+                MessageBox.Show($"Shopee file can not found!");
+                return;
+            }
+            using var package = new ExcelPackage(new FileInfo(ShopeeFilePath));
+            var worksheet1 = package.Workbook.Worksheets["Doanh thu - 1"];
+            var x = package.Workbook.Worksheets.Count;
+            var allSheets = package.Workbook.Worksheets;
+
+            for (int i = 2; i < allSheets.Count; i++)
+            {
+                var worksheet = allSheets[i];
+                int startRow = 4;
+                int endRow = worksheet.Dimension.End.Row;
+
+                for (int row = startRow; row <= endRow; row++)
+                {
+                    if (worksheet.Cells[row, 2].Text == "Sku") continue;
+                    
+                    var orderId = worksheet.Cells[row, 3].Text;
+                    if (!_orderDict.ContainsKey(orderId))
+                    {
+                        _orderDict.Add(orderId, new OrderModel());
+                    }
+
+                    _orderDict[orderId].COD = ParseDecimal(worksheet.Cells[row, 18].Text);
+
+                }
+            }
+
+        }
+
+        private decimal CalculateEstimatedIncome(OrderModel order)
+        {
+            //int soLuong;
+            //decimal DonGia;
+            //decimal PhiVCThuCuaKhach;
+            //decimal PhuThu;
+            //decimal GiamGiaTuDonHang;
+            //decimal GiamGiaTungSanPham;
+            //decimal PhiSan;
+            //decimal SanTroGia;
+            //decimal ChenhLechPhiVC_SanTMDT;
+            //decimal PhiDichVu_SanTMDT;
+            //decimal PhiThanhToan_SanTMDT;
+            //decimal PhiHoaHongNenTang_SanTMDT;
+            //decimal PhiCoDinh_GiaoDich_SanTMDT;
+
+            var estimatedIncome = order.SoLuong * order.DonGia
+                                  + order.PhiVCThuCuaKhach
+                                  + order.PhuThu
+                                  - order.GiamGiaTuDonHang
+                                  - order.GiamGiaTungSanPham
+                                  - order.PhiSan
+                                  + order.SanTroGia
+                                  - order.SoLuongHoan * order.DonGia;
+                                  //- order.SoLuongHoan * order.GiamGiaTungSanPham / order.SoLuong; //FIXME
+            return estimatedIncome;
+        }
+
+        private void Judgement()
+        {
+            foreach (var order in _orderDict.Values)
+            {
+                order.Diff = order.CongThuc - order.COD;
+
+                if (order.COD == 0 && order.CongThuc != 0)
+                {
+                    order.Result = TrangThai.DoiSoatKySau.Value;
+                }
+                else if (order.CongThuc == 0 && order.COD != 0)
+                {
+                    order.Result = TrangThai.POSThieuShopeeCo.Value;
+                }
+                else
+                {
+                    // Find cause.
+                    if (order.TrangThai=="Đã thu tiền" || order.TrangThai=="Đã nhận" || order.TrangThai=="Hoàn một phần")
+                    {
+                        if (order.Diff > -4 && order.Diff < 4){
+                            order.Result = TrangThai.MatPhi.Value;
+                        }
+                        else{
+                            if (order.Diff == order.GiamGiaTuDonHang){
+                                order.Result = TrangThai.LechDoTraThemGiaDonHang.Value;
+                            }
+                            else{
+                                if (order.Diff == -Math.Abs(order.PhiSan - order.ChenhLechPhiVC_SanTMDT - order.PhiDichVu_SanTMDT - order.PhiThanhToan_SanTMDT - order.PhiHoaHongNenTang_SanTMDT - order.PhiCoDinh_GiaoDich_SanTMDT) ){
+                                    order.Result = TrangThai.LechDoPhiSanDongBoVePOSSai.Value;
+                                }
+                                else{
+                                    order.Result = TrangThai.ChuaRo.Value;
+                                }
+                                
+                            }
+                        }
+                    }
+                    //
+                    if (order.TrangThai=="Đã đổi" || order.TrangThai=="Đổi một phần")
+                    {
+                        if (order.Diff > -4 && order.Diff < 4){
+                            order.Result = TrangThai.MatPhiVaSPHoanBest.Value;
+                        }
+                        else {
+                            if (order.Diff == order.GiamGiaTuDonHang){
+                                order.Result = TrangThai.LechDoDuocTraThemGiamGiaDonHangVaBanHoanBest.Value;
+                            }
+                            else{
+                                if (order.Diff == -Math.Abs(order.PhiSan - order.ChenhLechPhiVC_SanTMDT - order.PhiDichVu_SanTMDT - order.PhiThanhToan_SanTMDT - order.PhiHoaHongNenTang_SanTMDT - order.PhiCoDinh_GiaoDich_SanTMDT)){
+                                    order.Result = TrangThai.LechDoDuocTraThemGiamGiaDonHangVaBanHoanBest.Value; //"ok lệch do phí sàn đồng bộ về POS sai và bán hoàn BEST";
+                                }
+                                else{
+                                    if (order.SoLuong == 0) order.SoLuong = 1;
+                                    if ((order.Diff == order.SoLuongHoan*order.DonGia - order.GiamGiaTungSanPham/order.SoLuong - order.GiamGiaTuDonHang) ||
+                                        (order.Diff == order.SoLuongHoan*order.DonGia - order.GiamGiaTungSanPham/order.SoLuong) ){
+                                        order.Result = TrangThai.BanBestHoanPOS.Value; //"OK bán BEST hoàn do POS đã nhảy số lượng sau hoàn";
+                                    }
+                                    else{
+                                        order.Result = TrangThai.ChuaRo.Value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    //
+                    if (order.TrangThai=="Hoàn một phần"){
+                        if (order.Diff > -4 && order.Diff < 4){
+                            order.Result = TrangThai.KhongCongNoShopee.Value; //"OK và không sinh ra công nợ với Shopee";
+                        }
+                        else {
+                            if (order.Diff == 999999 + order.GiamGiaTuDonHang){ //FIXME V2
+                                order.Result = TrangThai.BiHoanCongNoShopeeGiamGia.Value; //"ok bị hoàn và sinh ra công nợ với Shopee, đc trả thêm giảm giá đơn hàng";
+                            }
+                            else{
+                                if (order.Diff == 999999){
+                                    order.Result = TrangThai.BiHoanSinhCongNoShopee.Value; //"ok bị hoàn và sinh ra công nợ với Shopee";
+                                }
+                                else{
+                                    order.Result = TrangThai.ChuaRo.Value;
+                                }
+                            }
+                        }
+                    }
+                    //
+                    if (order.PhiSan == 0 && order.TrangThai == "Đã hoàn (thu phí)"){
+                        if (order.Diff > -4 && order.Diff < 4){
+                            order.Result = TrangThai.MatPhi.Value; //"OK mất phí";
+                        }
+                        else {
+                            if (order.Diff == order.GiamGiaTuDonHang){
+                                order.Result = TrangThai.BiThuPhiHoanHangLech.Value; //"ok bị thu phí hoàn hàng lệch do đc trả lại phần giảm giá đơn hàng";
+                            }
+                            else{
+                                if (order.Diff == -Math.Abs(order.PhiSan - order.ChenhLechPhiVC_SanTMDT - order.PhiDichVu_SanTMDT - order.PhiThanhToan_SanTMDT - order.PhiHoaHongNenTang_SanTMDT - order.PhiCoDinh_GiaoDich_SanTMDT)){
+                                    order.Result = TrangThai.LechDoPhiSanDongBoVePOSSai.Value; //"ok lệch do phí sàn đồng bộ về POS sai";
+                                }
+                                else{
+                                    if (order.PhiSan != 0 && order.TrangThai == "Đã hoàn (thu phí)"){ // Fixme PhiSan
+                                        order.Result = TrangThai.CheckSanViDonHoanKhongTinhPhiSan.Value; //"check lại sàn vì đơn hoàn không được tính phí sàn";
+                                    }
+                                    else{
+                                        order.Result = TrangThai.ChuaRo.Value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    //
+                    else if (order.TrangThai == "Đang đổi"){
+                        if (order.Diff > -4 && order.Diff < 4){
+                            order.Result = TrangThai.GHTK.Value; //"OK GHTK";
+                        }
+                        else {
+                            if (order.Diff == order.GiamGiaTuDonHang){
+                                order.Result = TrangThai.GHTKLechDoTraThemGiamGiaDonHang.Value; //"ok GHTK lệch do đc trả thêm giảm giá đơn hàng";
+                            }
+                            else{
+                                if (order.Diff == -Math.Abs(order.PhiSan - order.ChenhLechPhiVC_SanTMDT - order.PhiDichVu_SanTMDT - order.PhiThanhToan_SanTMDT - order.PhiHoaHongNenTang_SanTMDT - order.PhiCoDinh_GiaoDich_SanTMDT)){
+                                    order.Result = TrangThai.GHTKLechPhiSanDongBoPOSSauVaBanHoanBest.Value; //"ok GHTK lệch do phí sàn đồng bộ về POS sai và bán hoàn BEST";
+                                }
+                                else{
+                                    if (order.SoLuong == 0) order.SoLuong = 1;
+                                    if ((order.Diff == order.SoLuongHoan*order.DonGia - order.GiamGiaTungSanPham/order.SoLuong - order.GiamGiaTuDonHang) || 
+                                        (order.Diff == order.SoLuongHoan*order.DonGia - order.GiamGiaTungSanPham/order.SoLuong - order.GiamGiaTuDonHang)){
+                                        order.Result = TrangThai.GHTKDoPosNhaySoLuongSauHoan.Value; //"OK GHTK do POS đã nhảy số lượng sau hoàn";
+                                    }
+                                    else{
+                                        order.Result = TrangThai.ChuaRo.Value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    //
+                    else if (order.TrangThai == "Đang hoàn"){
+                        if (order.Diff > -4 && order.Diff < 4){
+                            order.Result = TrangThai.GHTKSinhRaCongNoShopee.Value; //"OK GHTK và sinh ra công nợ với Shopee";
+                        }
+                        else {
+                            if (order.Diff == order.SoLuongHoan*order.DonGia - order.GiamGiaTungSanPham/order.SoLuong - order.GiamGiaTuDonHang){
+                                order.Result = TrangThai.GHTKKhongCongNoShopee.Value; //"ok GHTK và không sinh ra công nợ với Shopee";
+                            }
+                            else{
+                                if (order.Diff == -(order.SoLuongHoan*order.DonGia - order.GiamGiaTungSanPham/order.SoLuong*order.SoLuongHoan)){
+                                    order.Result = TrangThai.GHTKKhongCongNoShopee.Value; //"ok GHTK và không sinh ra công nợ với Shopee";
+                                }
+                                else{
+                                    if (order.Diff == -order.GiamGiaTuDonHang){
+                                        order.Result = TrangThai.GHTKLechDoTraThemGiamGiaDonHang.Value; //"ok GHTK lệch do đc trả thêm giảm giá đơn hàng";
+                                    }
+                                    else{
+                                        if (order.Diff == -Math.Abs(order.PhiSan - order.ChenhLechPhiVC_SanTMDT - order.PhiDichVu_SanTMDT - order.PhiThanhToan_SanTMDT - order.PhiHoaHongNenTang_SanTMDT - order.PhiCoDinh_GiaoDich_SanTMDT)){
+                                            order.Result = TrangThai.GHTKLechPhiSanPOS.Value; //"ok GHTK lệch do phí sàn đồng bộ về POS sai";
+                                        }
+                                        else{
+                                            order.Result = TrangThai.ChuaRo.Value;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    //
+                }
+            }
+
+        }
 
         private int ParseInt(string text)
         {

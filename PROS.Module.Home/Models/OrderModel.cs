@@ -24,8 +24,10 @@ namespace PROS.Module.Home.Models
         public decimal PhiCoDinh_GiaoDich_SanTMDT { get; set; }
         public int SoLuongHoan { get; set; }
         public string TrangThai { get; set; }
-        public string CongThuc { get; set; }
+        public decimal CongThuc { get; set; }
         public decimal COD { get; set; }
         public decimal Diff { get; set; }
+        public string Result { get; set; }
+        public decimal TriGiaHoan { get; set; }
     }
 }
